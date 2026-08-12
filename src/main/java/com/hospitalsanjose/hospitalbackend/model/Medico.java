@@ -23,8 +23,9 @@ public class Medico {
     @Column(nullable = false, length = 100)
     private String apellidos;
 
-    @Column(nullable = false, length = 100)
-    private String especialidad;
+    @ManyToOne
+    @JoinColumn(name = "id_especialidad")
+    private Especialidad especialidad;
 
     @Column(name = "colegiatura", nullable = false, unique = true, length = 30)
     private String colegiatura;

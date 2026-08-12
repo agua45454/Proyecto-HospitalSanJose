@@ -1,9 +1,11 @@
 package com.hospitalsanjose.hospitalbackend.service;
 
 import com.hospitalsanjose.hospitalbackend.dto.RegistroMedicoDTO;
+import com.hospitalsanjose.hospitalbackend.model.Especialidad;
 import com.hospitalsanjose.hospitalbackend.model.Medico;
 import com.hospitalsanjose.hospitalbackend.model.Rol;
 import com.hospitalsanjose.hospitalbackend.model.Usuario;
+import com.hospitalsanjose.hospitalbackend.repository.EspecialidadRepository;
 import com.hospitalsanjose.hospitalbackend.repository.MedicoRepository;
 import com.hospitalsanjose.hospitalbackend.repository.RolRepository;
 import com.hospitalsanjose.hospitalbackend.repository.UsuarioRepository;
@@ -25,6 +27,9 @@ public class MedicoService {
     private RolRepository rolRepository;
 
     @Autowired
+    private EspecialidadRepository especialidadRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -40,6 +45,10 @@ public class MedicoService {
         Rol rolMedico = rolRepository.findByNombreRol("Medico")
                 .orElseThrow(() -> new RuntimeException("Error: El rol 'Medico' no existe en la base de datos."));
 
+        // Buscar la entidad Especialidad en la BD según el texto recibido del DTO
+        Especialidad especialidad = especialidadRepository.findByNombre(dto.getEspecialidad())
+                .orElseThrow(() -> new RuntimeException("Error: La especialidad '" + dto.getEspecialidad() + "' no existe."));
+
         Usuario usuario = new Usuario();
         usuario.setCorreo(dto.getCorreo());
         usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
@@ -50,7 +59,7 @@ public class MedicoService {
         medico.setNombres(dto.getNombres());
         medico.setApellidos(dto.getApellidos());
         medico.setColegiatura(dto.getColegiatura());
-        medico.setEspecialidad(dto.getEspecialidad());
+        medico.setEspecialidad(especialidad); // ¡Ahora sí recibe un objeto Especialidad!
         medico.setTelefono(dto.getTelefono());
 
         medicoRepository.save(medico);
