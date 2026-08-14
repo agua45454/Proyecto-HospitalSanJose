@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
     }
 
-    // Cadena 1: API REST (/api/**) -> sin sesión, protegida con JWT
+    // Cadena 1: API REST (/api/**) -> Protegida con JWT
     @Bean
     @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
@@ -49,7 +49,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                // PERMITIMOS ACCESO LIBRE A AUTH, CHATBOT, CITAS Y MÉDICOS
+                .requestMatchers("/api/auth/**", "/api/chatbot/**", "/api/citas/**", "/api/medicos/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -57,7 +58,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Cadena 2: páginas Thymeleaf (login, registro) -> igual que antes
+    // Cadena 2: Vistas Web (Formulario de Login -> Dashboard)
     @Bean
     @Order(2)
     public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
@@ -69,7 +70,7 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/", true)
+                .defaultSuccessUrl("/dashboard", true)
                 .permitAll()
             )
             .logout(logout -> logout

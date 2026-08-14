@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,72 +9,82 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        /* Estilo para la burbuja flotante del Chatbot (Punto 3) */
         .chatbot-bubble {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #0d6efd;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-            z-index: 1000;
+            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
+            border-radius: 50%; background-color: #0d6efd; color: white; display: flex;
+            align-items: center; justify-content: center; font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000;
+            transition: transform 0.2s ease;
+        }
+        .chatbot-bubble:hover { transform: scale(1.08); }
+
+        .chat-window {
+            position: fixed; bottom: 90px; right: 20px; width: 350px; height: 450px;
+            background-color: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none; flex-direction: column; z-index: 1000; overflow: hidden;
+        }
+        .chat-header {
+            background-color: #0d6efd; color: white; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; font-weight: bold;
+        }
+        .chat-body {
+            flex: 1; padding: 15px; overflow-y: auto; background-color: #f8f9fa;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .chat-message { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 14px; word-wrap: break-word; }
+        .chat-message.bot { background-color: #e9ecef; color: #212529; align-self: flex-start; }
+        .chat-message.user { background-color: #0d6efd; color: white; align-self: flex-end; }
+        .chat-footer { padding: 10px; background-color: white; border-top: 1px solid #dee2e6; display: flex; gap: 5px; }
+
+        #appNotification {
+            position: fixed; top: 20px; right: 20px; z-index: 1050; display: none; min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
     </style>
 </head>
 <body class="bg-light">
 
-    <!-- 1. BARRA SUPERIOR (NAVBAR) -->
+    <div id="appNotification" class="alert alert-dismissible fade show" role="alert">
+        <span id="appNotificationText">Mensaje</span>
+        <button type="button" class="btn-close" onclick="ocultarNotificacion()"></button>
+    </div>
+
+    <!-- 1. NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container">
-            <!-- Logo del Hospital San José -->
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-hospital me-2"></i>Hospital San José
-            </a>
-            
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-hospital me-2"></i>Hospital San José</a>
             <div class="d-flex align-items-center">
-                <!-- Nombre del paciente de prueba -->
                 <span class="text-white me-3 fw-semibold">
-                    <i class="bi bi-person-circle me-1"></i> Bienvenido, Juan Pérez
+                    <i class="bi bi-person-circle me-1"></i> Bienvenido, <span id="lblNombrePaciente" th:text="${nombrePaciente != null ? nombrePaciente : 'Juan Pérez'}">Juan Pérez</span>
                 </span>
-                <!-- Botón de Cerrar Sesión -->
-                <a href="login.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <a th:href="@{/logout}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
         </div>
     </nav>
 
-    <!-- 2. PANEL PRINCIPAL (DASHBOARD) -->
+    <!-- 2. DASHBOARD -->
     <div class="container my-5">
         <h2 class="mb-4 text-secondary">Panel de Control del Paciente</h2>
 
         <div class="row g-4 mb-4">
-            <!-- Tarjeta 1 (Resumen) -->
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
                     <div class="card-body">
                         <h5 class="card-title text-muted fs-6">Próxima Cita</h5>
-                        <p class="card-text fs-4 fw-bold text-primary mb-0">
-                            <i class="bi bi-calendar-event me-2"></i>15 de Agosto - 10:00 AM
+                        <p class="card-text fs-4 fw-bold text-primary mb-0" id="lblProximaCita">
+                            <i class="bi bi-calendar-event me-2"></i>Cargando próxima cita...
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta 2 (Acciones Rápidas) -->
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body d-flex align-items-center justify-content-around flex-wrap gap-2">
-                        <button class="btn btn-primary btn-lg">
+                        <button class="btn btn-primary btn-lg" id="btnAbrirModalReserva">
                             <i class="bi bi-plus-circle me-2"></i>Reservar Nueva Cita
                         </button>
-                        <button class="btn btn-outline-secondary btn-lg">
+                        <button class="btn btn-outline-secondary btn-lg" id="btnVerCitas">
                             <i class="bi bi-list-check me-2"></i>Ver Mis Citas
                         </button>
                     </div>
@@ -82,10 +92,12 @@
             </div>
         </div>
 
-        <!-- Tabla o lista estática -->
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 text-dark fw-semibold">Historial y Próximas Citas</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="cargarCitasPaciente()">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -95,39 +107,314 @@
                             <th>Especialidad</th>
                             <th>Fecha</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Dr. Soto</td>
-                            <td>Cardiología</td>
-                            <td>20/08/2026</td>
-                            <td><span class="badge bg-success">Confirmado</span></td>
-                        </tr>
-                        <tr>
-                            <td>Dra. Mendoza</td>
-                            <td>Pediatría</td>
-                            <td>25/08/2026</td>
-                            <td><span class="badge bg-warning text-dark">Pendiente</span></td>
-                        </tr>
-                        <tr>
-                            <td>Dr. Ramírez</td>
-                            <td>Medicina General</td>
-                            <td>02/07/2026</td>
-                            <td><span class="badge bg-secondary">Atendido</span></td>
-                        </tr>
+                    <tbody id="tbodyCitas">
+                        <!-- Carga dinámica -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- 3. ESPACIO PARA EL CHATBOT (Preparado para KAN-15) -->
-    <div class="chatbot-bubble" title="Chatbot de Triaje">
-        <i class="bi bi-chat-dots-fill"></i>
+    <!-- 3. MODAL DE RESERVA DE CITA -->
+    <div class="modal fade" id="modalReservaCita" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Reservar Cita Médica</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formReservaCita">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Especialidad / Médico</label>
+                            <select class="form-select" id="selectMedico" required>
+                                <option value="">Cargando médicos y especialidades...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de la Cita</label>
+                            <input type="date" class="form-control" id="fechaCita" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Motivo / Síntomas</label>
+                            <textarea class="form-control" id="motivoConsulta" rows="3" placeholder="Ej: Dolor de cabeza..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarReserva">
+                        <i class="bi bi-check-circle me-1"></i> Confirmar Cita
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Bootstrap 5 JS -->
+    <!-- 4. CHATBOT (INTACTO) -->
+    <div class="chatbot-bubble" id="toggleChat" title="Asistente"><i class="bi bi-chat-dots-fill"></i></div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header"><span><i class="bi bi-robot me-2"></i> Triaje IA - San José</span><button type="button" class="btn-close btn-close-white" id="closeChat"></button></div>
+        <div class="chat-body" id="chatBody"><div class="chat-message bot">¡Hola! 👋 Soy el asistente virtual del Hospital San José. ¿Qué síntomas o molestias sientes hoy?</div></div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" class="form-control form-control-sm" placeholder="Escribe tus síntomas...">
+            <button class="btn btn-primary btn-sm" id="btnEnviar"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- LOGICA DEL CHATBOT ORIGINAL (NO TOCAR) ---
+        const toggleChat = document.getElementById('toggleChat');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChat = document.getElementById('closeChat');
+        const chatBody = document.getElementById('chatBody');
+        const chatInput = document.getElementById('chatInput');
+        const btnEnviar = document.getElementById('btnEnviar');
+
+        toggleChat.addEventListener('click', () => {
+            chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatWindow.style.display = 'none';
+        });
+
+        async function enviarMensajeChat() {
+            const texto = chatInput.value.trim();
+            if (!texto) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.textContent = texto;
+            chatBody.appendChild(userMsg);
+            chatInput.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chatbot/mensaje', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje: texto })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const botMsg = document.createElement('div');
+                    botMsg.className = 'chat-message bot';
+                    botMsg.innerHTML = data.respuesta || data;
+                    chatBody.appendChild(botMsg);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            } catch (e) {
+                console.error("Error en chatbot:", e);
+            }
+        }
+
+        btnEnviar.addEventListener('click', enviarMensajeChat);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensajeChat(); });
+
+        // --- LOGICA DE NOTIFICACIONES Y CITAS ---
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notif = document.getElementById('appNotification');
+            notif.className = `alert alert-${tipo} alert-dismissible fade show`;
+            document.getElementById('appNotificationText').innerHTML = mensaje;
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 4000);
+        }
+
+        const modalReserva = new bootstrap.Modal(document.getElementById('modalReservaCita'));
+        const idPacienteActual = 1;
+        document.getElementById('fechaCita').min = new Date().toISOString().split('T')[0];
+
+        document.getElementById('btnAbrirModalReserva').addEventListener('click', () => {
+            modalReserva.show();
+            cargarMedicos();
+        });
+
+        document.getElementById('btnVerCitas').addEventListener('click', () => {
+            cargarCitasPaciente();
+            document.querySelector('.table-responsive').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        async function cargarMedicos() {
+            const select = document.getElementById('selectMedico');
+            try {
+                const response = await fetch('/api/medicos');
+                if (response.ok) {
+                    const medicos = await response.json();
+                    select.innerHTML = '<option value="">Seleccione la especialidad o médico</option>';
+                    
+                    if (!medicos || medicos.length === 0) {
+                        select.innerHTML = '<option value="">No hay médicos registrados</option>';
+                        return;
+                    }
+
+                    medicos.forEach(med => {
+                        let espNombre = 'Medicina General';
+                        if (med.especialidad) {
+                            if (typeof med.especialidad === 'object' && med.especialidad.nombre) {
+                                espNombre = med.especialidad.nombre;
+                            } else if (typeof med.especialidad === 'string') {
+                                espNombre = med.especialidad;
+                            }
+                        }
+                        const opt = document.createElement('option');
+                        opt.value = med.idMedico;
+                        // Mostrar primero la especialidad entre corchetes para que coincida perfectamente con el chatbot
+                        opt.textContent = `[${espNombre}] Dr(a). ${med.nombres} ${med.apellidos}`;
+                        select.appendChild(opt);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Error al cargar médicos</option>';
+                }
+            } catch (e) {
+                console.error("Error cargando médicos:", e);
+                select.innerHTML = '<option value="">Error de conexión</option>';
+            }
+        }
+
+        document.getElementById('btnGuardarReserva').addEventListener('click', async () => {
+            const fecha = document.getElementById('fechaCita').value;
+            const motivo = document.getElementById('motivoConsulta').value;
+            const idMedico = document.getElementById('selectMedico').value;
+
+            if (!fecha || !motivo || !idMedico) {
+                mostrarNotificacion('Completa todos los campos.', 'warning');
+                return;
+            }
+
+            const dto = {
+                idPaciente: idPacienteActual,
+                idMedico: parseInt(idMedico),
+                idConsultorio: 1,
+                idHorario: 1,
+                fechaCita: fecha,
+                motivoConsulta: motivo
+            };
+
+            try {
+                const response = await fetch('/api/citas/reservar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+
+                if (response.ok) {
+                    mostrarNotificacion('¡Cita reservada con éxito!', 'success');
+                    modalReserva.hide();
+                    document.getElementById('formReservaCita').reset();
+                    cargarCitasPaciente();
+                } else {
+                    const errText = await response.text();
+                    mostrarNotificacion('Error: ' + errText, 'danger');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        });
+
+        async function cargarCitasPaciente() {
+            const tbody = document.getElementById('tbodyCitas');
+            const lblProximaCita = document.getElementById('lblProximaCita');
+            
+            try {
+                const response = await fetch(`/api/citas/paciente/${idPacienteActual}`);
+                if (response.ok) {
+                    const citas = await response.json();
+                    tbody.innerHTML = '';
+
+                    if (!citas || citas.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No tienes citas registradas.</td></tr>`;
+                        lblProximaCita.innerHTML = `<i class="bi bi-calendar-x me-2"></i>Sin citas pendientes`;
+                        return;
+                    }
+
+                    citas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+                    citas.forEach(cita => {
+                        const doctor = cita.medico ? `Dr. ${cita.medico.nombres} ${cita.medico.apellidos}` : 'Dr. Asignado';
+                        let especialidadTexto = 'Medicina General';
+                        if (cita.medico && cita.medico.especialidad) {
+                            if (typeof cita.medico.especialidad === 'object' && cita.medico.especialidad.nombre) {
+                                especialidadTexto = cita.medico.especialidad.nombre;
+                            } else if (typeof cita.medico.especialidad === 'string') {
+                                especialidadTexto = cita.medico.especialidad;
+                            }
+                        }
+
+                        let badgeColor = 'bg-warning text-dark';
+                        if (cita.estado === 'Confirmada') badgeColor = 'bg-success';
+                        if (cita.estado === 'Cancelada') badgeColor = 'bg-danger';
+                        if (cita.estado === 'Atendida') badgeColor = 'bg-info';
+
+                        let botonesAccion = '';
+                        if (cita.estado === 'Cancelada') {
+                            botonesAccion = `<button class="btn btn-sm btn-danger" onclick="eliminarCita(${cita.idCita})"><i class="bi bi-trash"></i> Eliminar</button>`;
+                        } else {
+                            botonesAccion = `<button class="btn btn-sm btn-outline-danger" onclick="cancelarCita(${cita.idCita})"><i class="bi bi-x-circle"></i> Cancelar</button>`;
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${doctor}</td>
+                            <td>${especialidadTexto}</td>
+                            <td>${cita.fecha}</td>
+                            <td><span class="badge ${badgeColor}">${cita.estado}</span></td>
+                            <td>${botonesAccion}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    const pendiente = citas.find(c => c.estado === 'Pendiente' || c.estado === 'Confirmada');
+                    if (pendiente) {
+                        lblProximaCita.innerHTML = `<i class="bi bi-calendar-event me-2"></i>${pendiente.fecha}`;
+                    } else {
+                        lblProximaCita.innerHTML = `<i class="bi bi-calendar-check me-2"></i>Sin citas pendientes`;
+                    }
+                } else {
+                    lblProximaCita.innerHTML = `<i class="bi bi-calendar-x me-2"></i>Sin citas pendientes`;
+                }
+            } catch (error) {
+                console.error("Error listando citas:", error);
+                lblProximaCita.innerHTML = `<i class="bi bi-calendar-x me-2"></i>Sin citas pendientes`;
+            }
+        }
+
+        async function cancelarCita(idCita) {
+            if (!confirm('¿Deseas cancelar esta cita?')) return;
+            try {
+                const response = await fetch(`/api/citas/cancelar/${idCita}`, { method: 'PUT' });
+                if (response.ok) {
+                    mostrarNotificacion('Cita cancelada correctamente.', 'success');
+                    cargarCitasPaciente();
+                } else {
+                    mostrarNotificacion('No se pudo cancelar la cita.', 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        async function eliminarCita(idCita) {
+            if (!confirm('¿Estás seguro de eliminar permanentemente esta cita de la base de datos?')) return;
+            try {
+                const response = await fetch(`/api/citas/${idCita}`, { method: 'DELETE' });
+                if (response.ok) {
+                    mostrarNotificacion('Cita eliminada correctamente.', 'success');
+                    cargarCitasPaciente();
+                } else {
+                    mostrarNotificacion('No se pudo eliminar la cita.', 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarCitasPaciente);
+    </script>
 </body>
 </html>

@@ -48,6 +48,7 @@ public class PacienteService {
         usuario.setCorreo(dto.getCorreo());
         usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         usuario.setRol(rolPaciente);
+        usuario.setActivo(true); // <--- AGREGAR ESTA LÍNEA PARA QUE EL USUARIO PUEDA LOGUEARSE
 
         // 3. Crear Paciente
         Paciente paciente = new Paciente();
