@@ -166,7 +166,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script th:inline="javascript">
         // --- LOGICA DEL CHATBOT ORIGINAL (NO TOCAR) ---
         const toggleChat = document.getElementById('toggleChat');
         const chatWindow = document.getElementById('chatWindow');
@@ -227,7 +227,13 @@
         }
 
         const modalReserva = new bootstrap.Modal(document.getElementById('modalReservaCita'));
-        const idPacienteActual = 1;
+        // CORRECCIÓN (Sprint 3): antes este valor estaba fijo en 1 y por
+        // eso TODAS las citas (sin importar quién esté logueado) se
+        // guardaban/mostraban como si fueran de Juan Perez. Ahora se toma
+        // el ID real del paciente autenticado. El "1" al final es solo un
+        // valor de respaldo por si por algún motivo no se resolvió el
+        // paciente (no debería pasar estando logueado).
+        const idPacienteActual = /*[[${idPaciente}]]*/ 1;
         document.getElementById('fechaCita').min = new Date().toISOString().split('T')[0];
 
         document.getElementById('btnAbrirModalReserva').addEventListener('click', () => {

@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class MedicoService {
 
@@ -63,5 +65,23 @@ public class MedicoService {
         medico.setTelefono(dto.getTelefono());
 
         medicoRepository.save(medico);
+    }
+
+    // ==========================================================
+    // NUEVO (Sprint 3): Mantenimiento de Médicos (panel admin)
+    // ==========================================================
+
+    public List<Medico> listarTodos() {
+        return medicoRepository.findAll();
+    }
+
+    @Transactional
+    public void cambiarEstado(Integer idMedico, boolean activo) {
+        Medico medico = medicoRepository.findById(idMedico)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado con ID: " + idMedico));
+
+        Usuario usuario = medico.getUsuario();
+        usuario.setActivo(activo);
+        usuarioRepository.save(usuario);
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class PacienteService {
 
@@ -63,5 +65,26 @@ public class PacienteService {
 
         // Guardar
         pacienteRepository.save(paciente);
+    }
+
+    // ==========================================================
+    // NUEVO (Sprint 3): Mantenimiento de Pacientes (panel admin)
+    // ==========================================================
+
+    public List<Paciente> listarTodos() {
+        return pacienteRepository.findAll();
+    }
+
+    @Transactional
+    public void cambiarEstado(Integer idPaciente, boolean activo) {
+        Paciente paciente = pacienteRepository.findById(idPaciente)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + idPaciente));
+
+        // Reutilizamos el flag "activo" que ya existe en Usuarios desde el
+        // Sprint 1 (no se agrega ninguna columna nueva a Pacientes, y así
+        // no se rompe ninguna consulta o lógica ya construida sobre esa tabla).
+        Usuario usuario = paciente.getUsuario();
+        usuario.setActivo(activo);
+        usuarioRepository.save(usuario);
     }
 }

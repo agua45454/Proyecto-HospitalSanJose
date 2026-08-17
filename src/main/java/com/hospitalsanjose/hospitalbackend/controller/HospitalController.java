@@ -1,6 +1,7 @@
 package com.hospitalsanjose.hospitalbackend.controller;
 
 import com.hospitalsanjose.hospitalbackend.dto.RegistroPacienteDTO;
+import com.hospitalsanjose.hospitalbackend.repository.MedicoRepository;
 import com.hospitalsanjose.hospitalbackend.repository.PacienteRepository;
 import com.hospitalsanjose.hospitalbackend.service.PacienteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,10 @@ public class HospitalController {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    // NUEVO (Sprint 3): para resolver el médico autenticado en /historia-clinica.
+    @Autowired
+    private MedicoRepository medicoRepository;
 
     @GetMapping("/")
     public String inicio() {
@@ -42,9 +47,39 @@ public class HospitalController {
             String correo = authentication.getName();
             pacienteRepository.findByUsuarioCorreo(correo).ifPresent(p -> {
                 model.addAttribute("nombrePaciente", p.getNombres() + " " + p.getApellidos());
+                // CORRECCIÓN (Sprint 3): antes el dashboard.html tenía el ID
+                // de paciente fijo en 1 (siempre "Juan Perez"), por lo que
+                // CUALQUIER paciente que reservaba una cita, esta se
+                // guardaba como si fuera de Juan. Ahora se pasa el ID real
+                // del paciente autenticado.
+                model.addAttribute("idPaciente", p.getIdPaciente());
             });
         }
         return "dashboard";
+    }
+
+    // NUEVO (Sprint 3): panel del médico (Historia Clínica Digital).
+    @GetMapping("/historia-clinica")
+    public String historiaClinica(Authentication authentication, Model model) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String correo = authentication.getName();
+            medicoRepository.findByUsuarioCorreo(correo).ifPresent(m -> {
+                model.addAttribute("idMedico", m.getIdMedico());
+                model.addAttribute("nombreMedico", m.getNombres() + " " + m.getApellidos());
+                model.addAttribute("especialidadMedico",
+                        m.getEspecialidad() != null ? m.getEspecialidad().getNombre() : "Sin especialidad asignada");
+            });
+        }
+        return "historia-clinica";
+    }
+
+    // NUEVO (Sprint 3): panel de Administrador (Mantenimiento y Reportes).
+    @GetMapping("/admin")
+    public String admin(Authentication authentication, Model model) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            model.addAttribute("nombreAdmin", authentication.getName());
+        }
+        return "admin";
     }
 
     @PostMapping("/registro")

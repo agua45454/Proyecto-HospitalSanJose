@@ -8,4 +8,7 @@ import java.util.Optional;
 @Repository
 public interface EspecialidadRepository extends JpaRepository<Especialidad, Integer> {
     Optional<Especialidad> findByNombre(String nombre);
+
+    // NUEVO (Sprint 3): validación de nombre único en el panel de mantenimiento.
+    boolean existsByNombre(String nombre);
 }

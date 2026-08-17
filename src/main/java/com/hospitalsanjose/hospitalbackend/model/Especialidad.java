@@ -18,4 +18,10 @@ public class Especialidad {
 
     @Column(length = 255)
     private String descripcion;
+
+    // NUEVO (Sprint 3): permite "desactivar" una especialidad desde el
+    // panel de mantenimiento sin borrarla físicamente (evita romper FKs
+    // con Medicos/Citas que ya la referencian).
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

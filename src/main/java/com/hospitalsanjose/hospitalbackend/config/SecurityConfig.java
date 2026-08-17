@@ -51,6 +51,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // PERMITIMOS ACCESO LIBRE A AUTH, CHATBOT, CITAS Y MÉDICOS
                 .requestMatchers("/api/auth/**", "/api/chatbot/**", "/api/citas/**", "/api/medicos/**").permitAll()
+                // NUEVO (Sprint 3): mismos criterios de acceso que el resto de la API
+                // (sin token JWT obligatorio), para no romper las llamadas fetch()
+                // ya existentes desde las vistas Thymeleaf.
+                .requestMatchers("/api/historia-clinica/**", "/api/especialidades/**",
+                        "/api/consultorios/**", "/api/pacientes/**", "/api/reportes/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -70,7 +75,26 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                // NUEVO (Sprint 3): antes todo usuario caía en /dashboard sin
+                // importar su rol (un Médico o Administrador veían el panel
+                // de Paciente, lo cual no tenía sentido). Ahora se redirige
+                // según el rol. Para "Paciente" el destino sigue siendo
+                // exactamente "/dashboard", igual que en Sprint 1 y 2: cero
+                // cambio de comportamiento para ese flujo ya probado.
+                .successHandler((request, response, authentication) -> {
+                    String rol = authentication.getAuthorities().stream()
+                            .findFirst()
+                            .map(a -> a.getAuthority())
+                            .orElse("");
+
+                    String destino = "/dashboard";
+                    if ("ROLE_Administrador".equals(rol)) {
+                        destino = "/admin";
+                    } else if ("ROLE_Medico".equals(rol)) {
+                        destino = "/historia-clinica";
+                    }
+                    response.sendRedirect(destino);
+                })
                 .permitAll()
             )
             .logout(logout -> logout

@@ -71,4 +71,11 @@ public class CitaController {
     public ResponseEntity<List<Cita>> listarPorPaciente(@PathVariable Integer idPaciente) {
         return ResponseEntity.ok(citaService.obtenerCitasPorPaciente(idPaciente));
     }
+
+    // NUEVO (Sprint 3): usado por la vista de Historia Clínica del médico
+    // para listar a los pacientes que tiene agendados.
+    @GetMapping("/medico/{idMedico}")
+    public ResponseEntity<List<Cita>> listarPorMedico(@PathVariable Integer idMedico) {
+        return ResponseEntity.ok(citaService.obtenerCitasPorMedico(idMedico));
+    }
 }

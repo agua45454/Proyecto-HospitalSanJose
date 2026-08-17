@@ -68,4 +68,10 @@ public class CitaService {
     public List<Cita> obtenerCitasPorPaciente(Integer idPaciente) {
         return citaRepository.findByPacienteIdPaciente(idPaciente);
     }
+
+    // NUEVO (Sprint 3): usado por la vista de Historia Clínica del médico,
+    // para listar a los pacientes que tiene agendados.
+    public List<Cita> obtenerCitasPorMedico(Integer idMedico) {
+        return citaRepository.findByMedicoIdMedico(idMedico);
+    }
 }
