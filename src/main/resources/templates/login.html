@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hospital San José | Iniciar Sesión</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --hsj-primary: #0284c7;
+            --hsj-primary-dark: #0369a1;
+            --hsj-bg: #f8fafc;
+            --hsj-card-bg: #ffffff;
+            --hsj-text: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--hsj-bg);
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: var(--hsj-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 0;
+        }
+
+        .card-login {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            background: var(--hsj-card-bg);
+            overflow: hidden;
+        }
+
+        .brand-header {
+            text-align: center;
+            padding: 2.5rem 2rem 1.5rem 2rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .brand-icon {
+            width: 60px;
+            height: 60px;
+            background-color: #e0f2fe;
+            color: var(--hsj-primary);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: #334155;
+            margin-bottom: 0.4rem;
+        }
+
+        .input-group-text {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+            color: #94a3b8;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .form-control {
+            border-color: #cbd5e1;
+            border-radius: 10px;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-group .form-control {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-control:focus {
+            border-color: var(--hsj-primary);
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--hsj-primary);
+            border-color: var(--hsj-primary);
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--hsj-primary-dark);
+            border-color: var(--hsj-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .custom-link {
+            color: var(--hsj-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .custom-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-sm-10 col-md-8 col-lg-5 col-xl-4">
+            
+            <div class="card card-login">
+                
+                <!-- Encabezado Institucional -->
+                <div class="brand-header">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-hospital"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: #0f172a;">Hospital San José</h3>
+                    <p class="text-muted mb-0 small">Acceda al portal del paciente</p>
+                </div>
+
+                <!-- Cuerpo del Formulario -->
+                <div class="card-body p-4 p-md-5">
+
+                    <!-- Mensaje de error dinámico si falla la autenticación de Spring Security -->
+                    <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="border-radius: 10px; font-size: 0.875rem;">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        <div>Correo o contraseña incorrectos.</div>
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+
+                        <!-- Correo Electrónico -->
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
+                                <input type="email" 
+                                       class="form-control" 
+                                       name="username" 
+                                       placeholder="nombre@ejemplo.com" 
+                                       required 
+                                       autofocus>
+                            </div>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="form-label mb-1">Contraseña</label>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" 
+                                       class="form-control" 
+                                       name="password" 
+                                       placeholder="••••••••" 
+                                       required>
+                            </div>
+                        </div>
+
+                        <!-- Botón Submit -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-right-to-bracket me-2"></i>Iniciar Sesión
+                            </button>
+                        </div>
+
+                    </form>
+
+                    <!-- Enlace a Registro -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <span class="text-muted small">¿No tienes una cuenta?</span>
+                        <a th:href="@{/registro}" class="custom-link small ms-1">Regístrate aquí</a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

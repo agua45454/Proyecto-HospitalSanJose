@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital San José - Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        #appNotification {
+            position: fixed; top: 20px; right: 20px; z-index: 1050; display: none; min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .nav-tabs .nav-link.active { font-weight: 600; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div id="appNotification" class="alert alert-dismissible fade show" role="alert">
+        <span id="appNotificationText">Mensaje</span>
+        <button type="button" class="btn-close" onclick="ocultarNotificacion()"></button>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-hospital me-2"></i>Hospital San José - Administración</a>
+            <!-- NUEVO (Sprint 4): botón "hamburguesa" para pantallas chicas -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAdminContent"
+                    aria-controls="navAdminContent" aria-expanded="false" aria-label="Mostrar menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navAdminContent">
+                <div class="d-flex align-items-center ms-auto flex-wrap gap-2 mt-2 mt-lg-0">
+                    <span class="text-white me-lg-3">
+                        <i class="bi bi-person-gear me-1"></i>
+                        <span th:text="${nombreAdmin != null ? nombreAdmin : 'Administrador'}">Administrador</span>
+                    </span>
+                    <a th:href="@{/logout}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+
+        <ul class="nav nav-tabs mb-4 flex-wrap" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-btn-reportes" data-bs-toggle="tab" data-bs-target="#tab-reportes" type="button">
+                    <i class="bi bi-bar-chart-line me-1"></i> Reportes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-pacientes" data-bs-toggle="tab" data-bs-target="#tab-pacientes" type="button">
+                    <i class="bi bi-people me-1"></i> Pacientes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-medicos" data-bs-toggle="tab" data-bs-target="#tab-medicos" type="button">
+                    <i class="bi bi-person-badge me-1"></i> Médicos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-especialidades" data-bs-toggle="tab" data-bs-target="#tab-especialidades" type="button">
+                    <i class="bi bi-clipboard2-pulse me-1"></i> Especialidades
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-consultorios" data-bs-toggle="tab" data-bs-target="#tab-consultorios" type="button">
+                    <i class="bi bi-door-open me-1"></i> Consultorios
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- ===================== REPORTES ===================== -->
+            <div class="tab-pane fade show active" id="tab-reportes">
+                <div class="row g-3 mb-4" id="tarjetasReporte">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm text-center p-3">
+                            <div class="text-muted small">Total de Citas</div>
+                            <div class="fs-3 fw-bold text-primary" id="repTotalCitas">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm text-center p-3">
+                            <div class="text-muted small">Historias Clínicas</div>
+                            <div class="fs-3 fw-bold text-info" id="repTotalHistorias">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm text-center p-3">
+                            <div class="text-muted small">Pacientes Registrados</div>
+                            <div class="fs-3 fw-bold text-success" id="repTotalPacientes">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm text-center p-3">
+                            <div class="text-muted small">Médicos Registrados</div>
+                            <div class="fs-3 fw-bold text-secondary" id="repTotalMedicos">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white fw-semibold">Citas por Estado</div>
+                            <div class="card-body">
+                                <table class="table mb-0">
+                                    <tbody>
+                                        <tr><td>Pendientes</td><td class="text-end"><span class="badge bg-warning text-dark" id="repPendientes">-</span></td></tr>
+                                        <tr><td>Confirmadas</td><td class="text-end"><span class="badge bg-success" id="repConfirmadas">-</span></td></tr>
+                                        <tr><td>Atendidas</td><td class="text-end"><span class="badge bg-info" id="repAtendidas">-</span></td></tr>
+                                        <tr><td>Canceladas</td><td class="text-end"><span class="badge bg-danger" id="repCanceladas">-</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white fw-semibold">Citas por Especialidad</div>
+                            <div class="card-body">
+                                <table class="table mb-0" id="tablaCitasEspecialidad">
+                                    <tbody>
+                                        <tr><td class="text-muted">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== PACIENTES ===================== -->
+            <div class="tab-pane fade" id="tab-pacientes">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Mantenimiento de Pacientes</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="cargarPacientes()"><i class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>ID</th><th>Nombre</th><th>DNI</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody id="tbodyPacientes"><tr><td colspan="7" class="text-center text-muted">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== MEDICOS ===================== -->
+            <div class="tab-pane fade" id="tab-medicos">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Mantenimiento de Médicos</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="cargarMedicosAdmin()"><i class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>ID</th><th>Nombre</th><th>Colegiatura</th><th>Especialidad</th><th>Correo</th><th>Estado</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody id="tbodyMedicos"><tr><td colspan="7" class="text-center text-muted">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== ESPECIALIDADES ===================== -->
+            <div class="tab-pane fade" id="tab-especialidades">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3"><h5 class="mb-0">Nueva Especialidad</h5></div>
+                    <div class="card-body">
+                        <form class="row g-2" id="formEspecialidad" onsubmit="return false;">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="espNombre" placeholder="Nombre (ej: Cardiología)" required>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" id="espDescripcion" placeholder="Descripción">
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="crearEspecialidad()"><i class="bi bi-plus-circle me-1"></i>Agregar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Especialidades Registradas</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="cargarEspecialidades()"><i class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody id="tbodyEspecialidades"><tr><td colspan="5" class="text-center text-muted">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== CONSULTORIOS ===================== -->
+            <div class="tab-pane fade" id="tab-consultorios">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3"><h5 class="mb-0">Nuevo Consultorio</h5></div>
+                    <div class="card-body">
+                        <form class="row g-2" id="formConsultorio" onsubmit="return false;">
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="conNumero" placeholder="N° (ej: 101)" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="conPiso" placeholder="Piso">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="conUbicacion" placeholder="Ubicación">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="conEstado">
+                                    <option value="Disponible">Disponible</option>
+                                    <option value="Ocupado">Ocupado</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="crearConsultorio()"><i class="bi bi-plus-circle me-1"></i>Agregar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Consultorios Registrados</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="cargarConsultorios()"><i class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>ID</th><th>Número</th><th>Piso</th><th>Ubicación</th><th>Estado</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody id="tbodyConsultorios"><tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notif = document.getElementById('appNotification');
+            notif.className = `alert alert-${tipo} alert-dismissible fade show`;
+            document.getElementById('appNotificationText').innerHTML = mensaje;
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 4000);
+        }
+        function ocultarNotificacion() {
+            document.getElementById('appNotification').style.display = 'none';
+        }
+
+        function badgeEstado(activo) {
+            return activo
+                ? '<span class="badge bg-success">Activo</span>'
+                : '<span class="badge bg-secondary">Inactivo</span>';
+        }
+
+        // ---------------- REPORTES ----------------
+        async function cargarReportes() {
+            try {
+                const response = await fetch('/api/reportes/resumen');
+                if (!response.ok) throw new Error('Error al cargar reportes');
+                const r = await response.json();
+
+                document.getElementById('repTotalCitas').textContent = r.totalCitas;
+                document.getElementById('repTotalHistorias').textContent = r.totalHistoriasClinicas;
+                document.getElementById('repTotalPacientes').textContent = r.totalPacientes;
+                document.getElementById('repTotalMedicos').textContent = r.totalMedicos;
+                document.getElementById('repPendientes').textContent = r.citasPendientes;
+                document.getElementById('repConfirmadas').textContent = r.citasConfirmadas;
+                document.getElementById('repAtendidas').textContent = r.citasAtendidas;
+                document.getElementById('repCanceladas').textContent = r.citasCanceladas;
+
+                const tbody = document.querySelector('#tablaCitasEspecialidad tbody');
+                const entries = Object.entries(r.citasPorEspecialidad || {});
+                if (entries.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-muted">Aún no hay citas registradas.</td></tr>';
+                } else {
+                    tbody.innerHTML = entries.map(([nombre, total]) =>
+                        `<tr><td>${nombre}</td><td class="text-end fw-semibold">${total}</td></tr>`
+                    ).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarNotificacion('Error al cargar los reportes.', 'danger');
+            }
+        }
+
+        // ---------------- PACIENTES ----------------
+        async function cargarPacientes() {
+            const tbody = document.getElementById('tbodyPacientes');
+            try {
+                const response = await fetch('/api/pacientes');
+                const pacientes = await response.json();
+                if (!pacientes.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay pacientes registrados.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = pacientes.map(p => `
+                    <tr>
+                        <td>${p.idPaciente}</td>
+                        <td>${p.nombres} ${p.apellidos}</td>
+                        <td>${p.dni || '-'}</td>
+                        <td>${p.correo || '-'}</td>
+                        <td>${p.telefono || '-'}</td>
+                        <td>${badgeEstado(p.activo)}</td>
+                        <td>
+                            <button class="btn btn-sm ${p.activo ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                onclick="cambiarEstadoPaciente(${p.idPaciente}, ${!p.activo})">
+                                ${p.activo ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error de conexión.</td></tr>';
+            }
+        }
+
+        async function cambiarEstadoPaciente(id, nuevoEstado) {
+            try {
+                const response = await fetch(`/api/pacientes/${id}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activo: nuevoEstado })
+                });
+                if (response.ok) {
+                    mostrarNotificacion('Estado del paciente actualizado.', 'success');
+                    cargarPacientes();
+                } else {
+                    mostrarNotificacion('No se pudo actualizar el estado.', 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        // ---------------- MEDICOS ----------------
+        async function cargarMedicosAdmin() {
+            const tbody = document.getElementById('tbodyMedicos');
+            try {
+                const response = await fetch('/api/medicos');
+                const medicos = await response.json();
+                if (!medicos.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay médicos registrados.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = medicos.map(m => `
+                    <tr>
+                        <td>${m.idMedico}</td>
+                        <td>${m.nombres} ${m.apellidos}</td>
+                        <td>${m.colegiatura || '-'}</td>
+                        <td>${m.especialidad ? m.especialidad.nombre : '-'}</td>
+                        <td>${m.correo || '-'}</td>
+                        <td>${badgeEstado(m.activo)}</td>
+                        <td>
+                            <button class="btn btn-sm ${m.activo ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                onclick="cambiarEstadoMedico(${m.idMedico}, ${!m.activo})">
+                                ${m.activo ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error de conexión.</td></tr>';
+            }
+        }
+
+        async function cambiarEstadoMedico(id, nuevoEstado) {
+            try {
+                const response = await fetch(`/api/medicos/${id}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activo: nuevoEstado })
+                });
+                if (response.ok) {
+                    mostrarNotificacion('Estado del médico actualizado.', 'success');
+                    cargarMedicosAdmin();
+                } else {
+                    mostrarNotificacion('No se pudo actualizar el estado.', 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        // ---------------- ESPECIALIDADES ----------------
+        async function cargarEspecialidades() {
+            const tbody = document.getElementById('tbodyEspecialidades');
+            try {
+                const response = await fetch('/api/especialidades');
+                const especialidades = await response.json();
+                if (!especialidades.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay especialidades registradas.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = especialidades.map(e => `
+                    <tr>
+                        <td>${e.idEspecialidad}</td>
+                        <td>${e.nombre}</td>
+                        <td>${e.descripcion || '-'}</td>
+                        <td>${badgeEstado(e.activo)}</td>
+                        <td>
+                            <button class="btn btn-sm ${e.activo ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                onclick="cambiarEstadoEspecialidad(${e.idEspecialidad}, ${!e.activo})">
+                                ${e.activo ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error de conexión.</td></tr>';
+            }
+        }
+
+        async function crearEspecialidad() {
+            const nombre = document.getElementById('espNombre').value.trim();
+            const descripcion = document.getElementById('espDescripcion').value.trim();
+            if (!nombre) {
+                mostrarNotificacion('El nombre es obligatorio.', 'warning');
+                return;
+            }
+            try {
+                const response = await fetch('/api/especialidades', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, descripcion })
+                });
+                if (response.ok) {
+                    mostrarNotificacion('Especialidad creada correctamente.', 'success');
+                    document.getElementById('espNombre').value = '';
+                    document.getElementById('espDescripcion').value = '';
+                    cargarEspecialidades();
+                } else {
+                    mostrarNotificacion(await response.text(), 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        async function cambiarEstadoEspecialidad(id, nuevoEstado) {
+            try {
+                const response = await fetch(`/api/especialidades/${id}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activo: nuevoEstado })
+                });
+                if (response.ok) {
+                    mostrarNotificacion('Estado actualizado.', 'success');
+                    cargarEspecialidades();
+                } else {
+                    mostrarNotificacion('No se pudo actualizar el estado.', 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        // ---------------- CONSULTORIOS ----------------
+        async function cargarConsultorios() {
+            const tbody = document.getElementById('tbodyConsultorios');
+            try {
+                const response = await fetch('/api/consultorios');
+                const consultorios = await response.json();
+                if (!consultorios.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay consultorios registrados.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = consultorios.map(c => `
+                    <tr>
+                        <td>${c.idConsultorio}</td>
+                        <td>${c.numero}</td>
+                        <td>${c.piso || '-'}</td>
+                        <td>${c.ubicacion || '-'}</td>
+                        <td>${c.estado}</td>
+                        <td>
+                            <select class="form-select form-select-sm" style="width: 140px; display:inline-block;"
+                                onchange="cambiarEstadoConsultorio(${c.idConsultorio}, this.value)">
+                                <option value="Disponible" ${c.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                                <option value="Ocupado" ${c.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
+                                <option value="Mantenimiento" ${c.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error de conexión.</td></tr>';
+            }
+        }
+
+        async function crearConsultorio() {
+            const numero = document.getElementById('conNumero').value.trim();
+            if (!numero) {
+                mostrarNotificacion('El número de consultorio es obligatorio.', 'warning');
+                return;
+            }
+            const dto = {
+                numero,
+                piso: document.getElementById('conPiso').value.trim(),
+                ubicacion: document.getElementById('conUbicacion').value.trim(),
+                estado: document.getElementById('conEstado').value
+            };
+            try {
+                const response = await fetch('/api/consultorios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+                if (response.ok) {
+                    mostrarNotificacion('Consultorio creado correctamente.', 'success');
+                    document.getElementById('conNumero').value = '';
+                    document.getElementById('conPiso').value = '';
+                    document.getElementById('conUbicacion').value = '';
+                    cargarConsultorios();
+                } else {
+                    mostrarNotificacion(await response.text(), 'danger');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        async function cambiarEstadoConsultorio(id, nuevoEstado) {
+            try {
+                // Se obtiene el consultorio actual para no perder número/piso/ubicación al actualizar.
+                const response = await fetch('/api/consultorios');
+                const consultorios = await response.json();
+                const actual = consultorios.find(c => c.idConsultorio === id);
+                if (!actual) return;
+
+                const dto = { numero: actual.numero, piso: actual.piso, ubicacion: actual.ubicacion, estado: nuevoEstado };
+                const putResponse = await fetch(`/api/consultorios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+                if (putResponse.ok) {
+                    mostrarNotificacion('Estado del consultorio actualizado.', 'success');
+                } else {
+                    mostrarNotificacion('No se pudo actualizar el estado.', 'danger');
+                }
+                cargarConsultorios();
+            } catch (e) {
+                mostrarNotificacion('Error de conexión.', 'danger');
+            }
+        }
+
+        // ---------------- CARGA INICIAL ----------------
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarReportes();
+            cargarPacientes();
+            cargarMedicosAdmin();
+            cargarEspecialidades();
+            cargarConsultorios();
+        });
+    </script>
+</body>
+</html>
